@@ -1,0 +1,12 @@
+# Backup files
+*.bak.*
+backup/
+*~
+*.original
+
+# Script logs
+_copilot-*.log
+
+# Editor files
+*.swp
+*.swo
