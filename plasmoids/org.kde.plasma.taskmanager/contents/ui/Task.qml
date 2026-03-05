@@ -537,9 +537,12 @@ PlasmaCore.ToolTipArea {
 	    height: width
 
             // TPO: greyscale icons
+	    // note: desaturation goes from 0.0 (none) to 1.0 (total)
             layer.enabled: true
             layer.effect: Desaturate {
-                desaturation: 1.0
+		// OLD: desaturation: 1.0
+		// TODO:
+		desaturation: 0.50
             }
         }
 
