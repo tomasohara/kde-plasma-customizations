@@ -201,12 +201,6 @@ ColumnLayout {
                     visible: valid
                     opacity: pipeWireLoader.active ? 0 : 1
 
-                    // TPO: greyscale icons
-                    layer.enabled: true
-                    layer.effect: Desaturate {
-                        desaturation: 1.0
-                    }
-
                     SequentialAnimation {
                         running: true
 
