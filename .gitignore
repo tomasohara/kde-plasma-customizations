@@ -10,3 +10,6 @@ _copilot-*.log
 # Editor files
 *.swp
 *.swo
+
+# Screenshot previews of desktop layout
+containmentpreviews
