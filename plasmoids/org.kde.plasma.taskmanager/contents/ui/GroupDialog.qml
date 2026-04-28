@@ -16,6 +16,8 @@ import QtQuick.Window 2.15
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents3
 import org.kde.draganddrop 2.0
+import org.kde.kitemmodels 1.0
+import org.kde.taskmanager 0.1 as TaskManager
 
 import "code/layout.js" as LayoutManager
 
@@ -41,12 +43,20 @@ PlasmaCore.Dialog {
     property alias overflowing: scrollView.overflowing
     property var _oldAppletStatus: PlasmaCore.Types.UnknownStatus
 
+    KSortFilterProxyModel {
+        id: groupProxyModel
+        sourceModel: tasksModel
+        sortRole: "display"
+        sortOrder: Qt.AscendingOrder
+    }
+
     function findActiveTaskIndex() {
         if (!tasksModel.activeTask) {
             return;
         }
+        const activeProxyIndex = groupProxyModel.mapFromSource(tasksModel.activeTask);
         for (let i = 0; i < groupListView.count; i++) {
-            if (tasksModel.makeModelIndex(visualParent.itemIndex, i) === tasksModel.activeTask) {
+            if (groupFilter.items.get(i).modelIndex === activeProxyIndex) {
                 groupListView.positionViewAtIndex(i, ListView.Contain); // Prevent visual glitches
                 groupListView.currentIndex = i;
                 return;
@@ -75,8 +85,14 @@ PlasmaCore.Dialog {
                 return;
             }
 
+            // Manual reordering in an alphabetically sorted list is confusing and often disabled.
+            // However, we keep the original logic but mapping indices back to source might be needed.
+            // For now, we use the original tasksModel directly for moves.
             const parentModelIndex = tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex);
-            const status = tasksModel.move(groupListView.currentIndex, insertAt, parentModelIndex);
+            const sourceIndex = groupFilter.items.get(groupListView.currentIndex).modelIndex;
+            const mappedIndex = groupProxyModel.mapToSource(sourceIndex);
+
+            const status = tasksModel.move(mappedIndex.row, insertAt, parentModelIndex);
             if (!status) {
                 return;
             }
@@ -111,8 +127,8 @@ PlasmaCore.Dialog {
                     readonly property TextMetrics textMetrics: TextMetrics {}
                     property real maxTextWidth: 0
 
-                    model: tasksModel
-                    rootIndex: tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex)
+                    model: groupProxyModel
+                    rootIndex: groupProxyModel.mapFromSource(tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex))
                     delegate: Task {
                         width: groupListView.width
                         visible: true
