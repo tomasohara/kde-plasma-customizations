@@ -16,6 +16,7 @@ import QtQuick.Window 2.15
 import org.kde.plasma.core 2.0 as PlasmaCore
 import org.kde.plasma.components 3.0 as PlasmaComponents3
 import org.kde.draganddrop 2.0
+// Gemini: support for multiple sorting strategies
 import org.kde.kitemmodels 1.0
 import org.kde.taskmanager 0.1 as TaskManager
 
@@ -43,6 +44,7 @@ PlasmaCore.Dialog {
     property alias overflowing: scrollView.overflowing
     property var _oldAppletStatus: PlasmaCore.Types.UnknownStatus
 
+    // Gemini: support for multiple sorting strategies
     KSortFilterProxyModel {
         id: groupProxyModel
         sourceModel: tasksModel
@@ -58,6 +60,15 @@ PlasmaCore.Dialog {
         if (!tasksModel.activeTask) {
             return;
         }
+
+        // Gemini: support for multiple sorting strategies
+        // OLD: for (let i = 0; i < groupListView.count; i++) {
+        // OLD:     if (tasksModel.makeModelIndex(visualParent.itemIndex, i) === tasksModel.activeTask) {
+        // OLD:         groupListView.positionViewAtIndex(i, ListView.Contain); // Prevent visual glitches
+        // OLD:         groupListView.currentIndex = i;
+        // OLD:         return;
+        // OLD:     }
+        // OLD: }
         const activeProxyIndex = groupProxyModel.enabled ? groupProxyModel.mapFromSource(tasksModel.activeTask) : tasksModel.activeTask;
         for (let i = 0; i < groupListView.count; i++) {
             if (groupFilter.items.get(i).modelIndex === activeProxyIndex) {
@@ -89,8 +100,11 @@ PlasmaCore.Dialog {
                 return;
             }
 
+            // Gemini: support for multiple sorting strategies
             // Manual reordering in an alphabetically sorted list is confusing and often disabled.
             // However, we keep the original logic but mapping indices back to source if proxy is enabled.
+            // OLD: const parentModelIndex = tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex);
+            // OLD: const status = tasksModel.move(groupListView.currentIndex, insertAt, parentModelIndex);
             const parentModelIndex = tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex);
             const sourceIndex = groupFilter.items.get(groupListView.currentIndex).modelIndex;
             const mappedIndex = groupProxyModel.enabled ? groupProxyModel.mapToSource(sourceIndex) : sourceIndex;
@@ -130,6 +144,9 @@ PlasmaCore.Dialog {
                     readonly property TextMetrics textMetrics: TextMetrics {}
                     property real maxTextWidth: 0
 
+                    // Gemini: support for multiple sorting strategies
+                    // OLD: model: tasksModel
+                    // OLD: rootIndex: tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex)
                     model: groupProxyModel
                     rootIndex: groupProxyModel.enabled ? groupProxyModel.mapFromSource(tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex)) : tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex)
                     delegate: Task {
