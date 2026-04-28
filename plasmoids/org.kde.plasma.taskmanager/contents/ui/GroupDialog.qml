@@ -48,13 +48,17 @@ PlasmaCore.Dialog {
         sourceModel: tasksModel
         sortRole: "display"
         sortOrder: Qt.AscendingOrder
+        sortCaseSensitivity: Qt.CaseInsensitive
+        // Enable sorting only if alphabetical (1) is selected.
+        // Age-based (0) is achieved by disabling proxy sorting (preserving source order).
+        enabled: (plasmoid.configuration.groupSortStrategy === 1)
     }
 
     function findActiveTaskIndex() {
         if (!tasksModel.activeTask) {
             return;
         }
-        const activeProxyIndex = groupProxyModel.mapFromSource(tasksModel.activeTask);
+        const activeProxyIndex = groupProxyModel.enabled ? groupProxyModel.mapFromSource(tasksModel.activeTask) : tasksModel.activeTask;
         for (let i = 0; i < groupListView.count; i++) {
             if (groupFilter.items.get(i).modelIndex === activeProxyIndex) {
                 groupListView.positionViewAtIndex(i, ListView.Contain); // Prevent visual glitches
@@ -86,11 +90,10 @@ PlasmaCore.Dialog {
             }
 
             // Manual reordering in an alphabetically sorted list is confusing and often disabled.
-            // However, we keep the original logic but mapping indices back to source might be needed.
-            // For now, we use the original tasksModel directly for moves.
+            // However, we keep the original logic but mapping indices back to source if proxy is enabled.
             const parentModelIndex = tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex);
             const sourceIndex = groupFilter.items.get(groupListView.currentIndex).modelIndex;
-            const mappedIndex = groupProxyModel.mapToSource(sourceIndex);
+            const mappedIndex = groupProxyModel.enabled ? groupProxyModel.mapToSource(sourceIndex) : sourceIndex;
 
             const status = tasksModel.move(mappedIndex.row, insertAt, parentModelIndex);
             if (!status) {
@@ -128,7 +131,7 @@ PlasmaCore.Dialog {
                     property real maxTextWidth: 0
 
                     model: groupProxyModel
-                    rootIndex: groupProxyModel.mapFromSource(tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex))
+                    rootIndex: groupProxyModel.enabled ? groupProxyModel.mapFromSource(tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex)) : tasksModel.makeModelIndex(groupDialog.visualParent.itemIndex)
                     delegate: Task {
                         width: groupListView.width
                         visible: true
